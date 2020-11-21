@@ -1,11 +1,10 @@
-const PPTXCompose = require("pptx-compose");
 const fs = require("fs");
 var exec = require('child_process').exec;
 var parser = require('fast-xml-parser');
 const uuid = require("uuid");
 const path = require("path");
 
-const typePrefix = "SB";
+let typePrefix = "SB";
 
 function execute(command){
     return new Promise(((resolve, reject) => {
@@ -306,26 +305,30 @@ function proPresenterXmlTemplate(options) {
         const slideTitle = index === 0 ? title : "";
 
         let groupName = "";
+
         switch(v.verseType) {
             case "chorus":
-                groupName = "Chorus";
+                groupName = "chorus";
                 break;
             case "bridge":
-                groupName = "Bridge";
+                groupName = "bridge";
                 break;
             case "ending":
-                groupName = "Ending";
+                groupName = "ending";
                 break;
             case "verse":
                 verseCounter++;
-                groupName = "Verse " + verseCounter;
+                groupName = "verse " + verseCounter;
                 break;
         }
+
+        groupName = typePrefix + " " + options.name.replace(/^[0]{1,}/g, "") + " " + groupName;
+        console.log(groupName);
 
         const lines = v.content.split("\n");
         let parts = [];
         if(lines.length > 7) {
-            console.log(typePrefix + options.name, "verse", (index + 1), "is split over 2 slides");
+            console.log(groupName, (index + 1), "is split over 2 slides");
             const n = Math.ceil(lines.length / 2);
             const part0 = lines.slice(0, n);
             const part1 = lines.slice(n);
@@ -363,9 +366,6 @@ async function pptx2pro(file) {
         console.log(typePrefix + options.name, "is blank");
     }
 
-    // console.log("\tstarted " + file);
-    // console.log("\t", options)
-
     const xml = proPresenterXmlTemplate(options);
     const outputName = options.name + ".pro6";
 
@@ -373,12 +373,13 @@ async function pptx2pro(file) {
     // console.log("\tcompleted " + outputName);
 }
 
-async function main() {
+async function process(prefix) {
+    typePrefix = prefix.toUpperCase();
 
     console.log("setting up output directory...");
 
-    if(fs.existsSync("./bundle.pro6x")) {
-        fs.unlinkSync("./bundle.pro6x");
+    if(fs.existsSync(`./bundle-${prefix}.pro6x`)) {
+        fs.unlinkSync(`./bundle-${prefix}.pro6x`);
     }
 
     if(fs.existsSync("./output")) {
@@ -390,7 +391,8 @@ async function main() {
     fs.mkdirSync("./output");
 
     console.log("discovering src files");
-    let files = fs.readdirSync("./src")
+    const srcDir = "./src-" + prefix;
+    let files = fs.readdirSync(srcDir)
 
     console.log("processing files...");
 
@@ -398,14 +400,19 @@ async function main() {
 
     for(let i = 0; i < files.length; i++) {
         // console.log(i, " of ", files.length);
-        todo.push(pptx2pro("./src/" + files[i]));
+        todo.push(pptx2pro(srcDir + "/" + files[i]));
     }
 
     await Promise.all(todo);
 
     console.log("creating bundle...");
-    await exec("zip bundle.pro6x ./output/*.pro6");
+    await exec(`zip bundle-${prefix}.pro6x ./output/*.pro6`);
     console.log("done!");
+}
+
+async function main() {
+    await process("ph");
+    await process("sb");
 }
 
 main();
