@@ -1,0 +1,10 @@
+
+*.pro6x
+src
+src-ph
+output
+node_modules
+PH1 copy.pptx
+output.txt
+*.pptx
+*.zip
