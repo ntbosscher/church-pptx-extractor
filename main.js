@@ -229,7 +229,7 @@ function verseContentText(verse) {
 \\deftab720
 \\pard\\pardeftab720\\qc\\partightenfactor0
 
-\\f0\\fs180${verse}}`);
+\\f0\\fs180 \\cf1${verse}}\\cf0`);
 }
 
 function titleText(title) {
@@ -281,12 +281,12 @@ function slide(title, verse, content) {
                             </dictionary>
                             <NSString rvXMLIvarName="RTFData">${titleText(title)}</NSString>
                         </RVTextElement>
-                        <RVTextElement UUID="${newUUID()}" additionalLineFillHeight="0.000000" adjustsHeightToFit="false" bezelRadius="0.000000" displayDelay="0.000000" displayName="TextElement" drawLineBackground="false" drawingFill="false" drawingShadow="false" drawingStroke="false" fillColor="0 0 0 0" fromTemplate="false" lineBackgroundType="0" lineFillVerticalOffset="0.000000" locked="false" opacity="1.000000" persistent="false" revealType="0" rotation="0.000000" source="" textSourceRemoveLineReturnsOption="false" typeID="0" useAllCaps="false" verticalAlignment="0">
+                        <RVTextElement UUID="${newUUID()}" additionalLineFillHeight="0.000000" adjustsHeightToFit="false" bezelRadius="0.000000" displayDelay="0.000000" displayName="Default" drawLineBackground="false" drawingFill="false" drawingShadow="false" drawingStroke="false" fillColor="1 1 1 1" fromTemplate="false" lineBackgroundType="0" lineFillVerticalOffset="0.000000" locked="false" opacity="1.000000" persistent="false" revealType="0" rotation="0.000000" source="" textSourceRemoveLineReturnsOption="false" typeID="0" useAllCaps="false" verticalAlignment="0">
                             <RVRect3D rvXMLIvarName="position">{82 2 0 1755 1195}</RVRect3D>
                             <shadow rvXMLIvarName="shadow">0.000000|0 0 0 1|{4, -4}</shadow>
                             <dictionary rvXMLIvarName="stroke">
                                 <NSColor rvXMLDictionaryKey="RVShapeElementStrokeColorKey">0 0 0 1</NSColor>
-                                <NSNumber hint="float" rvXMLDictionaryKey="RVShapeElementStrokeWidthKey">1.000000</NSNumber>
+                                <NSNumber hint="double" rvXMLDictionaryKey="RVShapeElementStrokeWidthKey">0.000000</NSNumber>
                             </dictionary>
                             <NSString rvXMLIvarName="RTFData">${verseContentText(content)}</NSString>
                         </RVTextElement>
@@ -308,35 +308,34 @@ function proPresenterXmlTemplate(options) {
 
         switch(v.verseType) {
             case "chorus":
-                groupName = "chorus";
+                groupName = "Chorus";
                 break;
             case "bridge":
-                groupName = "bridge";
+                groupName = "Bridge";
                 break;
             case "ending":
-                groupName = "ending";
+                groupName = "Ending";
                 break;
             case "verse":
                 verseCounter++;
-                groupName = "verse " + verseCounter;
+                groupName = "Verse " + verseCounter;
                 break;
         }
 
-        groupName = typePrefix + " " + options.name.replace(/^[0]{1,}/g, "") + " " + groupName;
-        console.log(groupName);
+        const verseName = typePrefix + " " + options.name.replace(/^[0]{1,}/g, "") + " " + groupName.toLowerCase();
 
         const lines = v.content.split("\n");
         let parts = [];
-        if(lines.length > 7) {
+        if(lines.length > 7 || v.content.length > 260) { // split big verses
             console.log(groupName, (index + 1), "is split over 2 slides");
             const n = Math.ceil(lines.length / 2);
             const part0 = lines.slice(0, n);
             const part1 = lines.slice(n);
 
-            parts.push(slide(slideTitle, groupName, part0.join("\n")))
-            parts.push(slide("", groupName, part1.join("\n")))
+            parts.push(slide(slideTitle, verseName, part0.join("\n")))
+            parts.push(slide("", verseName, part1.join("\n")))
         } else {
-            parts.push(slide(slideTitle, groupName, lines.join("\n")));
+            parts.push(slide(slideTitle, verseName, lines.join("\n")));
         }
 
         return grouping(groupName, parts.join("\n"));
